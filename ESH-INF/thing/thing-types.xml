@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="minecraft"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+        xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+    <thing-type id="minecraft-switch">
+        <label>Minecraft Switch</label>
+        <description>Switch for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelPowered" typeId="powered-channel" />
+        </channels>
+
+		<config-description>
+			<parameter name="endpoint" type="text" required="true">
+				<label>Endpoint</label>
+				<default>http://localhost:9998/rest/</default>
+				<description>Minecraft rest server endpoint</description>
+			</parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>			
+			<parameter name="id" type="text" required="true">
+				<label>Identifier</label>
+				<default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+				<description>Identifier of Minecraft Block</description>
+			</parameter>
+		</config-description>
+    
+    </thing-type>
+
+    <thing-type id="minecraft-button">
+        <label>Minecraft Button</label>
+        <description>Button for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelPowered" typeId="powered-channel" />
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>
+
+    <thing-type id="minecraft-door">
+        <label>Minecraft Door</label>
+        <description>Door for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelOpen" typeId="open-channel"/>
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>
+    
+    
+    <thing-type id="minecraft-plate">
+        <label>Minecraft Pressure Plate</label>
+        <description>Pressure Plate for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelPressed" typeId="pressed-channel"/>
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true" min="1" max="60" >
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true">
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>            
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>        
+    
+    <thing-type id="minecraft-weather-sensor">
+        <label>Minecraft Weather Sensor</label>
+        <description>Weather Sensor for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelHumidity" typeId="humidity-channel"/>
+            <channel id="channelLight" typeId="light-channel"/>
+            <channel id="channelPower" typeId="power-channel"/>
+            <channel id="channelTemperature" typeId="temperature-channel"/>
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>            
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>    
+
+    <thing-type id="minecraft-lamp">
+        <label>Minecraft Lamp</label>
+        <description>Lamp for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelPoweredReadonly" typeId="readonly-powered-channel" />
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>            
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>     
+
+    <thing-type id="minecraft-tripwire">
+        <label>Minecraft Tripwire</label>
+        <description>Tripwire for Minecraft Binding</description>
+
+        <channels>
+            <channel id="channelPoweredReadonly" typeId="readonly-powered-channel" />
+        </channels>
+
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://localhost:9998/rest/</default>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
+                <label>Refresh</label>
+                <default>10</default>
+                <description>Refresh interval of Minecraft Block's status</description>
+            </parameter>            
+            <parameter name="id" type="text" required="true">
+                <label>Identifier</label>
+                <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
+                <description>Identifier of Minecraft Block</description>
+            </parameter>
+        </config-description>
+    
+    </thing-type>    
+
+
+    <channel-type id="powered-channel">
+        <item-type>Switch</item-type>
+        <label>Powered</label>        
+        <description>Channel for Minecraft Switches (i.e. Level, Button etc.)</description>
+        <category>Switch</category>
+    </channel-type>
+    
+    <channel-type id="readonly-powered-channel">
+        <item-type>Switch</item-type>
+        <label>Powered</label>        
+        <description>Channel for Minecraft Lamps and Tripwires</description>
+        <category>Switch</category>
+        <state readOnly="true" />
+    </channel-type>
+    
+    <channel-type id="open-channel">
+        <item-type>Switch</item-type>
+        <label>Open</label>
+        <description>Channel for Minecraft Doors (i.e. Door, Trapdoor, Gate etc.)</description>
+        <category>Door</category>
+    </channel-type>
+    
+    <channel-type id="pressed-channel">
+        <item-type>Switch</item-type>
+        <label>Pressed</label>
+        <description>Channel for Minecraft Pressure Plates</description>
+        <category>Switch</category>
+        <state readOnly="true" />
+    </channel-type>    
+    
+    <channel-type id="humidity-channel">
+        <item-type>Number</item-type>
+        <label>Humidity</label>
+        <description>Channel for Minecraft Sensors (i.e. Daylight Sensor)</description>
+        <category>Humidity</category>
+        <state readOnly="true" min="0" max="100" pattern="%.3f" />
+    </channel-type>
+    
+    <channel-type id="light-channel">
+        <item-type>Number</item-type>
+        <label>Light</label>
+        <description>Channel for Minecraft Sensors (i.e. Daylight Sensor)</description>
+        <category>Light</category>
+        <state readOnly="true" />
+    </channel-type>
+
+    <channel-type id="power-channel">
+        <item-type>Number</item-type>
+        <label>Power</label>
+        <description>Channel for Minecraft Sensors (i.e. Daylight Sensor)</description>
+        <category>Energy</category>
+        <state readOnly="true" />
+    </channel-type>
+
+    <channel-type id="temperature-channel">
+        <item-type>Number</item-type>
+        <label>Temperature</label>
+        <description>Channel for Minecraft Sensors (i.e. Daylight Sensor)</description>
+        <category>Temperature</category>
+        <state readOnly="true" min="0" max="100" pattern="%.3f" />        
+    </channel-type>
+
+    <channel-type id="player-channel" >
+        <item-type>String</item-type>
+        <label>Player</label>
+        <description>Channel for Minecraft Server</description>
+        <state readOnly="true" />        
+    </channel-type>
+
+</thing:thing-descriptions>
