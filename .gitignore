@@ -1,20 +1,12 @@
-target/
-src-gen/
-xtend-gen/
-bin/
-.antlr*
-.metadata/
-*/plugin.xml_gen
-.DS_Store
+*.class
 
-distribution/smarthome/logs/*.log
-distribution/smarthome/*.zip
-distribution/smarthome/runtime/etc/mapdb/storage.mapdb
-distribution/smarthome/runtime/etc/mapdb/storage.mapdb.p
-distribution/smarthome/runtime/etc/mapdb/storage.mapdb.t
-bundles/core/org.eclipse.smarthome.core.id.test/userdata/
-bundles/model/antlr-generator-3.2.0-patch.jar
-bundles/storage/org.eclipse.smarthome.storage.mapdb.test/userdata/mapdb/storage.mapdb
-bundles/storage/org.eclipse.smarthome.storage.mapdb.test/userdata/mapdb/storage.mapdb.p
-bundles/storage/org.eclipse.smarthome.storage.mapdb.test/userdata/mapdb/storage.mapdb.t
-features/karaf*/src/main/history
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
