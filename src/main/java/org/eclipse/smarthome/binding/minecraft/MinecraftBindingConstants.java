@@ -19,6 +19,9 @@ public class MinecraftBindingConstants {
 
     public static final String BINDING_ID = "minecraft";
 
+    // Bridge Type UID
+    public final static ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
+
     // List of all Thing Type UIDs
     public final static ThingTypeUID THING_TYPE_MINECRAFT_SWITCH = new ThingTypeUID(BINDING_ID, "minecraft-switch");
     public final static ThingTypeUID THING_TYPE_MINECRAFT_BUTTON = new ThingTypeUID(BINDING_ID, "minecraft-button");
@@ -28,12 +31,12 @@ public class MinecraftBindingConstants {
             "minecraft-weather-sensor");
     public final static ThingTypeUID THING_TYPE_MINECRAFT_LAMP = new ThingTypeUID(BINDING_ID, "minecraft-lamp");
     public final static ThingTypeUID THING_TYPE_MINECRAFT_TRIPWIRE = new ThingTypeUID(BINDING_ID, "minecraft-tripwire");
+
     // List of all Channel ids
     public final static String CHANNEL_POWERED = "channelPowered";
     public final static String CHANNEL_OPEN = "channelOpen";
     public final static String CHANNEL_PRESSED = "channelPressed";
     public final static String CHANNEL_POWERED_READONLY = "channelPoweredReadonly";
-
     public final static String CHANNEL_HUMIDITY = "channelHumidity";
     public final static String CHANNEL_LIGHT = "channelLight";
     public final static String CHANNEL_POWER = "channelPower";

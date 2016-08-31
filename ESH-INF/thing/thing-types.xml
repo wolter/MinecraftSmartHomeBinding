@@ -4,7 +4,25 @@
         xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
         xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
 
+    <bridge-type id="bridge">
+        <label>Minecraft Server Bridge</label>
+        <description>The Minecraft Server Bridge represents the Minecraft Spigot/Bukkit Server with the Minecraft SmartHome Plug-in installed.</description>
+        <config-description>
+            <parameter name="endpoint" type="text" required="true">
+                <label>Endpoint</label>
+                <default>http://mcserver:9998/rest/</default>
+                <context>network_address</context>
+                <description>Minecraft rest server endpoint</description>
+            </parameter>
+        </config-description>
+    </bridge-type>
+
     <thing-type id="minecraft-switch">
+        
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>
+
         <label>Minecraft Switch</label>
         <description>Switch for Minecraft Binding</description>
 
@@ -13,11 +31,6 @@
         </channels>
 
 		<config-description>
-			<parameter name="endpoint" type="text" required="true">
-				<label>Endpoint</label>
-				<default>http://localhost:9998/rest/</default>
-				<description>Minecraft rest server endpoint</description>
-			</parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>
@@ -33,6 +46,11 @@
     </thing-type>
 
     <thing-type id="minecraft-button">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>
+    
         <label>Minecraft Button</label>
         <description>Button for Minecraft Binding</description>
 
@@ -41,11 +59,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true">
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>
@@ -61,6 +74,11 @@
     </thing-type>
 
     <thing-type id="minecraft-door">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>    
+    
         <label>Minecraft Door</label>
         <description>Door for Minecraft Binding</description>
 
@@ -69,11 +87,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true">
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>
@@ -90,6 +103,11 @@
     
     
     <thing-type id="minecraft-plate">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>    
+    
         <label>Minecraft Pressure Plate</label>
         <description>Pressure Plate for Minecraft Binding</description>
 
@@ -98,11 +116,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true" min="1" max="60" >
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true">
                 <label>Refresh</label>
                 <default>10</default>
@@ -118,6 +131,11 @@
     </thing-type>        
     
     <thing-type id="minecraft-weather-sensor">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>    
+    
         <label>Minecraft Weather Sensor</label>
         <description>Weather Sensor for Minecraft Binding</description>
 
@@ -129,11 +147,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true">
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>
@@ -149,6 +162,11 @@
     </thing-type>    
 
     <thing-type id="minecraft-lamp">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>    
+    
         <label>Minecraft Lamp</label>
         <description>Lamp for Minecraft Binding</description>
 
@@ -157,11 +175,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true">
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>
@@ -177,6 +190,11 @@
     </thing-type>     
 
     <thing-type id="minecraft-tripwire">
+    
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="bridge" />
+        </supported-bridge-type-refs>    
+    
         <label>Minecraft Tripwire</label>
         <description>Tripwire for Minecraft Binding</description>
 
@@ -185,11 +203,6 @@
         </channels>
 
         <config-description>
-            <parameter name="endpoint" type="text" required="true">
-                <label>Endpoint</label>
-                <default>http://localhost:9998/rest/</default>
-                <description>Minecraft rest server endpoint</description>
-            </parameter>
             <parameter name="refresh" type="integer" required="true" min="1" max="60" >
                 <label>Refresh</label>
                 <default>10</default>

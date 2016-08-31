@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<units size='2'>
+  <unit id='org.eclipse.smarthome.binding.minecraft' version='0.8.0.201608302132'>
+    <update id='org.eclipse.smarthome.binding.minecraft' range='[0.0.0,0.8.0.201608302132)' severity='0'/>
+    <properties size='5'>
+      <property name='org.eclipse.equinox.p2.name' value='Minecraft Binding'/>
+      <property name='org.eclipse.equinox.p2.provider' value='Eclipse.org/SmartHome'/>
+      <property name='maven-groupId' value='org.eclipse.smarthome.binding'/>
+      <property name='maven-artifactId' value='org.eclipse.smarthome.binding.minecraft'/>
+      <property name='maven-version' value='0.8.0-SNAPSHOT'/>
+    </properties>
+    <provides size='5'>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.smarthome.binding.minecraft' version='0.8.0.201608302132'/>
+      <provided namespace='osgi.bundle' name='org.eclipse.smarthome.binding.minecraft' version='0.8.0.201608302132'/>
+      <provided namespace='java.package' name='org.eclipse.smarthome.binding.minecraft' version='0.0.0'/>
+      <provided namespace='java.package' name='org.eclipse.smarthome.binding.minecraft.handler' version='0.0.0'/>
+      <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+    </provides>
+    <requires size='12'>
+      <required namespace='java.package' name='com.google.common.collect' range='0.0.0'/>
+      <required namespace='java.package' name='com.google.gson' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.binding.minecraft' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.binding.minecraft.handler' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.config.core' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.config.discovery' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.core.library.types' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.core.thing' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.core.thing.binding' range='0.0.0'/>
+      <required namespace='java.package' name='org.eclipse.smarthome.core.types' range='0.0.0'/>
+      <required namespace='java.package' name='org.osgi.framework' range='0.0.0'/>
+      <required namespace='java.package' name='org.slf4j' range='0.0.0'/>
+    </requires>
+    <artifacts size='1'>
+      <artifact classifier='osgi.bundle' id='org.eclipse.smarthome.binding.minecraft' version='0.8.0.201608302132'/>
+    </artifacts>
+    <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+    <touchpointData size='1'>
+      <instructions size='1'>
+        <instruction key='manifest'>
+          Bundle-SymbolicName: org.eclipse.smarthome.binding.minecraft;singleton:=true&#xA;Bundle-Version: 0.8.0.201608302132&#xA;
+        </instruction>
+      </instructions>
+    </touchpointData>
+  </unit>
+  <unit id='org.eclipse.smarthome.binding.minecraft.source' version='0.8.0.201608302132' singleton='false'>
+    <update id='org.eclipse.smarthome.binding.minecraft.source' range='[0.0.0,0.8.0.201608302132)' severity='0'/>
+    <properties size='9'>
+      <property name='df_LT.bundleVendor' value='Eclipse.org/SmartHome'/>
+      <property name='df_LT.bundleName' value='Minecraft Binding Source'/>
+      <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+      <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+      <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+      <property name='maven-groupId' value='org.eclipse.smarthome.binding'/>
+      <property name='maven-artifactId' value='org.eclipse.smarthome.binding.minecraft'/>
+      <property name='maven-version' value='0.8.0-SNAPSHOT'/>
+      <property name='maven-classifier' value='sources'/>
+    </properties>
+    <provides size='4'>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.smarthome.binding.minecraft.source' version='0.8.0.201608302132'/>
+      <provided namespace='osgi.bundle' name='org.eclipse.smarthome.binding.minecraft.source' version='0.8.0.201608302132'/>
+      <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+      <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+    </provides>
+    <artifacts size='1'>
+      <artifact classifier='osgi.bundle' id='org.eclipse.smarthome.binding.minecraft.source' version='0.8.0.201608302132'/>
+    </artifacts>
+    <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+    <touchpointData size='1'>
+      <instructions size='1'>
+        <instruction key='manifest'>
+          Bundle-SymbolicName: org.eclipse.smarthome.binding.minecraft.source&#xA;Bundle-Version: 0.8.0.201608302132&#xA;
+        </instruction>
+      </instructions>
+    </touchpointData>
+  </unit>
+</units>

@@ -25,6 +25,7 @@ import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingType;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -51,6 +52,7 @@ public class MinecraftHandler extends BaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+
         // handle command
         switch (channelUID.getId()) {
             case CHANNEL_POWERED:
@@ -92,7 +94,6 @@ public class MinecraftHandler extends BaseThingHandler {
         }
     }
 
-    private String endpoint;
     private String id;
     private Long refreshInterval;
 
@@ -101,7 +102,6 @@ public class MinecraftHandler extends BaseThingHandler {
 
         Configuration config = getConfig();
         refreshInterval = ((BigDecimal) config.get("refresh")).longValue();
-        endpoint = (String) config.get("endpoint");
         id = (String) config.get("id");
 
         startAutomaticRefresh();
@@ -119,6 +119,22 @@ public class MinecraftHandler extends BaseThingHandler {
     }
 
     private void requestState() {
+
+        String endpoint;
+
+        try {
+            Bridge bridge = getBridge();
+            MinecraftBridgeHandler minecraftbridgehandler = (MinecraftBridgeHandler) bridge.getHandler();
+            endpoint = minecraftbridgehandler.getEndpoint();
+            if (endpoint.isEmpty()) {
+                logger.warn("Unable to request state for an empty endpoint.");
+                return;
+            }
+        } catch (Exception e) {
+            logger.warn("Unable to request state: " + e.getMessage(), e);
+            updateStatus(ThingStatus.OFFLINE);
+            return;
+        }
 
         String urlTemplate = "%sthings/%s";
         String urlString = String.format(urlTemplate, endpoint, id);
@@ -219,6 +235,22 @@ public class MinecraftHandler extends BaseThingHandler {
 
     private void postState(MinecraftThingCommand command) {
 
+        String endpoint;
+
+        try {
+            Bridge bridge = getBridge();
+            MinecraftBridgeHandler minecraftbridgehandler = (MinecraftBridgeHandler) bridge.getHandler();
+            endpoint = minecraftbridgehandler.getEndpoint();
+            if (endpoint.isEmpty()) {
+                logger.warn("Unable to post command to an empty endpoint.");
+                return;
+            }
+        } catch (Exception e) {
+            logger.warn("Unable to post command: " + e.getMessage(), e);
+            updateStatus(ThingStatus.OFFLINE);
+            return;
+        }
+
         String urlString = endpoint + "commands/execute/";
         String json = new Gson().toJson(command);
 
@@ -247,12 +279,12 @@ public class MinecraftHandler extends BaseThingHandler {
             if (connection.getResponseCode() == 200) {
                 updateStatus(ThingStatus.ONLINE);
             } else {
-                logger.warn("Unable to post state: " + connection.getResponseCode());
+                logger.warn("Unable to post command: " + connection.getResponseCode());
                 updateStatus(ThingStatus.OFFLINE);
             }
             connection.disconnect();
         } catch (Exception e) {
-            logger.warn("Unable to post state: " + e.getMessage(), e);
+            logger.warn("Unable to post command: " + e.getMessage(), e);
             updateStatus(ThingStatus.OFFLINE);
         }
 

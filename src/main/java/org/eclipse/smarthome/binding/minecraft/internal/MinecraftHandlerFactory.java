@@ -9,13 +9,23 @@ package org.eclipse.smarthome.binding.minecraft.internal;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.smarthome.binding.minecraft.handler.MinecraftBridgeHandler;
 import org.eclipse.smarthome.binding.minecraft.handler.MinecraftHandler;
+import org.eclipse.smarthome.config.core.Configuration;
+import org.eclipse.smarthome.config.discovery.DiscoveryService;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.osgi.framework.ServiceRegistration;
 
 import com.google.common.collect.Sets;
 
@@ -31,9 +41,23 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
             THING_TYPE_MINECRAFT_DOOR, THING_TYPE_MINECRAFT_PLATE, THING_TYPE_MINECRAFT_WEATHER_SENSOR,
             THING_TYPE_MINECRAFT_LAMP);
 
+    private final static Set<ThingTypeUID> SUPPORTED_BRIDGE_TYPES_UIDS = Collections.singleton(THING_TYPE_BRIDGE);
+
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+        return Sets.union(SUPPORTED_THING_TYPES_UIDS, SUPPORTED_BRIDGE_TYPES_UIDS).contains(thingTypeUID);
+    }
+
+    @Override
+    public Thing createThing(ThingTypeUID thingTypeUID, Configuration configuration, ThingUID thingUID,
+            ThingUID bridgeUID) {
+        if (SUPPORTED_BRIDGE_TYPES_UIDS.contains(thingTypeUID)) {
+            return super.createThing(thingTypeUID, configuration, bridgeUID, null);
+        }
+        if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
+            return super.createThing(thingTypeUID, configuration, thingUID, bridgeUID);
+        }
+        throw new IllegalArgumentException("The thing type " + thingTypeUID + " is not supported by the hue binding.");
     }
 
     @Override
@@ -41,10 +65,39 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
 
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
-            return new MinecraftHandler(thing);
+        if (SUPPORTED_BRIDGE_TYPES_UIDS.contains(thingTypeUID)) {
+            MinecraftBridgeHandler bridgeHandler = new MinecraftBridgeHandler((Bridge) thing);
+            registerDiscoveryService(bridgeHandler);
+            return bridgeHandler;
         }
-
-        return null;
+        if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
+            MinecraftHandler thingHandler = new MinecraftHandler(thing);
+            return thingHandler;
+        }
+        throw new IllegalArgumentException(
+                "The thing type " + thingTypeUID + " is not supported by the Minecraft SmartHome binding.");
     }
+
+    private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
+
+    private synchronized void registerDiscoveryService(MinecraftBridgeHandler bridgeHandler) {
+        MinecraftDiscoveryService discoveryService = new MinecraftDiscoveryService(bridgeHandler);
+        this.discoveryServiceRegs.put(bridgeHandler.getThing().getUID(), bundleContext
+                .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<String, Object>()));
+    }
+
+    @Override
+    protected synchronized void removeHandler(ThingHandler thingHandler) {
+        if (thingHandler instanceof MinecraftBridgeHandler) {
+            ServiceRegistration<?> serviceReg = this.discoveryServiceRegs.get(thingHandler.getThing().getUID());
+            if (serviceReg != null) {
+                // remove discovery service, if bridge handler is removed
+                MinecraftDiscoveryService service = (MinecraftDiscoveryService) bundleContext
+                        .getService(serviceReg.getReference());
+                serviceReg.unregister();
+                discoveryServiceRegs.remove(thingHandler.getThing().getUID());
+            }
+        }
+    }
+
 }

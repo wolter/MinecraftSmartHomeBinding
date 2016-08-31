@@ -9,6 +9,11 @@
     <version>0.8.0-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <bundle.symbolicName>org.eclipse.smarthome.binding.minecraft</bundle.symbolicName>
+    <bundle.namespace>org.eclipse.smarthome.binding.minecraft</bundle.namespace>
+  </properties>
+
   <groupId>org.eclipse.smarthome.binding</groupId>
   <artifactId>org.eclipse.smarthome.binding.minecraft</artifactId>
   <version>0.8.0-SNAPSHOT</version>

@@ -6,11 +6,13 @@ package org.eclipse.smarthome.binding.minecraft.internal;
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
 
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.smarthome.binding.minecraft.handler.MinecraftBridgeHandler;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingList;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
@@ -34,9 +36,12 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
 
     private final static int SEARCH_TIME = 10;
 
-    public MinecraftDiscoveryService() throws IllegalArgumentException {
+    private MinecraftBridgeHandler bridge;
+
+    public MinecraftDiscoveryService(MinecraftBridgeHandler bridge) throws IllegalArgumentException {
         super(Sets.newHashSet(THING_TYPE_MINECRAFT_SWITCH, THING_TYPE_MINECRAFT_DOOR, THING_TYPE_MINECRAFT_PLATE,
-                THING_TYPE_MINECRAFT_WEATHER_SENSOR, THING_TYPE_MINECRAFT_LAMP), SEARCH_TIME, true);
+                THING_TYPE_MINECRAFT_WEATHER_SENSOR, THING_TYPE_MINECRAFT_LAMP), SEARCH_TIME, false);
+        this.bridge = bridge;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
     private MinecraftThingList requestList() {
 
         String urlTemplate = "%sthings";
-        String urlString = String.format(urlTemplate, "http://localhost:9998/rest/");
+        String urlString = String.format(urlTemplate, bridge.getEndpoint());
 
         try {
             // Create HTTP GET request
@@ -82,8 +87,7 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
 
         ThingUID thingUID = new ThingUID(BINDING_ID, String.valueOf(minecraftThing.id));
         Map<String, Object> properties = new HashMap<>(1);
-        properties.put("refresh", 10);
-        properties.put("endpoint", "http://localhost:9998/rest/");
+        properties.put("refresh", new BigDecimal(4));
         properties.put("id", minecraftThing.id);
         properties.put("type", minecraftThing.type);
         properties.put("material", minecraftThing.material);
@@ -120,7 +124,7 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
             String label = String.format("%s %s", minecraftThing.material,
                     String.valueOf(minecraftThing.location.toString()));
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withThingType(thingTypeUID)
-                    .withProperties(properties).withLabel(label).build();
+                    .withBridge(bridge.getThing().getUID()).withProperties(properties).withLabel(label).build();
             thingDiscovered(discoveryResult);
         } else {
             logger.debug("Discovered unsupported Minecraft Thing of type '{}' with id {}.", minecraftThing.type,
