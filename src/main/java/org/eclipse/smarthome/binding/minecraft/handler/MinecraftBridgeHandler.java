@@ -15,6 +15,10 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -22,6 +26,10 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.glassfish.jersey.media.sse.EventListener;
+import org.glassfish.jersey.media.sse.EventSource;
+import org.glassfish.jersey.media.sse.InboundEvent;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +69,25 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR, "Cannot connect to
         // bridge.");
         updateStatus(ThingStatus.ONLINE);
+
+        // TODO Refactor prototypic trial of SSE
+        Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
+
+        WebTarget target = client.target(endpoint + "events/");
+        logger.info("!!!" + endpoint + "events/");
+        EventSource eventSource = EventSource.target(target).build();
+        EventListener listener = new EventListener() {
+            @Override
+            public void onEvent(InboundEvent inboundEvent) {
+                logger.info("!!!" + inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+            }
+        };
+        // here you could filter for certain messages
+        eventSource.register(listener);
+        eventSource.open();
+        // ...
+        // TODO Don't forget to close the eventSource.close();
+
     }
 
     public void setStatus(ThingStatus status) {
