@@ -48,8 +48,10 @@ public class MinecraftDiscoveryParticipant implements MDNSDiscoveryParticipant {
             Map<String, Object> properties = new HashMap<>(2);
             properties.put(ENDPOINT, String.format("%s%s/", url, service.getPropertyString(URI)));
 
-            DiscoveryResult result = DiscoveryResultBuilder.create(uid).withProperties(properties)
-                    .withLabel(service.getName()).withRepresentationProperty(ENDPOINT).build();
+            String label = String.format("Bridge (%s)", url);
+
+            DiscoveryResult result = DiscoveryResultBuilder.create(uid).withProperties(properties).withLabel(label)
+                    .withRepresentationProperty(ENDPOINT).build();
             return result;
 
         } else {
@@ -68,5 +70,4 @@ public class MinecraftDiscoveryParticipant implements MDNSDiscoveryParticipant {
             return null;
         }
     }
-
 }

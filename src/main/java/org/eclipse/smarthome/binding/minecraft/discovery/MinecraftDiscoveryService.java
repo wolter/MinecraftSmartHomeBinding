@@ -137,4 +137,10 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
 
     }
 
+    @Override
+    protected synchronized void stopScan() {
+        super.stopScan();
+        removeOlderResults(getTimestampOfLastScan());
+    }
+
 }
