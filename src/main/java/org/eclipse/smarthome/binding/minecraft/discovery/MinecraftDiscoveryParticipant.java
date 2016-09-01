@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2014-2016 by the respective copyright holders.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
 package org.eclipse.smarthome.binding.minecraft.discovery;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
@@ -39,8 +46,7 @@ public class MinecraftDiscoveryParticipant implements MDNSDiscoveryParticipant {
         String url = service.getURLs().length > 0 ? service.getURLs()[0] : null;
         if (uid != null && url != null) {
             Map<String, Object> properties = new HashMap<>(2);
-            properties.put(ENDPOINT, url);
-            properties.put(URI, service.getPropertyString(URI));
+            properties.put(ENDPOINT, String.format("%s%s/", url, service.getPropertyString(URI)));
 
             DiscoveryResult result = DiscoveryResultBuilder.create(uid).withProperties(properties)
                     .withLabel(service.getName()).withRepresentationProperty(ENDPOINT).build();

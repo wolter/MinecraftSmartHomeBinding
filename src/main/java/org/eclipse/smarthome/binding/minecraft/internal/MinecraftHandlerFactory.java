@@ -15,6 +15,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.smarthome.binding.minecraft.discovery.MinecraftDiscoveryService;
 import org.eclipse.smarthome.binding.minecraft.handler.MinecraftBridgeHandler;
 import org.eclipse.smarthome.binding.minecraft.handler.MinecraftHandler;
 import org.eclipse.smarthome.config.core.Configuration;
@@ -56,6 +57,7 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
             return super.createThing(thingTypeUID, configuration, minecraftBridgeUID, null);
         }
         if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
+            ThingUID minecraftThingUID = getMinecraftThingUID(thingTypeUID, thingUID, configuration, bridgeUID);
             return super.createThing(thingTypeUID, configuration, thingUID, bridgeUID);
         }
         throw new IllegalArgumentException("The thing type " + thingTypeUID + " is not supported by the hue binding.");
@@ -104,8 +106,19 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
     private ThingUID getBridgeThingUID(ThingTypeUID thingTypeUID, ThingUID thingUID, Configuration configuration) {
         if (thingUID == null) {
             String endpoint = (String) configuration.get(ENDPOINT);
-            String id = endpoint.replace("http[s]://", "").replaceAll("\\.", "_").replaceAll(":", "__");
+            String id = endpoint.replace("http[s]://", "").replace("/rest/", "").replaceAll("\\.", "_").replaceAll(":",
+                    "__");
             thingUID = new ThingUID(thingTypeUID, id);
+        }
+        return thingUID;
+    }
+
+    private ThingUID getMinecraftThingUID(ThingTypeUID thingTypeUID, ThingUID thingUID, Configuration configuration,
+            ThingUID bridgeUID) {
+        String id = (String) configuration.get("id");
+
+        if (thingUID == null) {
+            thingUID = new ThingUID(thingTypeUID, id, bridgeUID.getId());
         }
         return thingUID;
     }

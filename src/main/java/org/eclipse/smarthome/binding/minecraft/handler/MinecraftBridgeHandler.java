@@ -1,7 +1,13 @@
 /**
- *
+ * Copyright (c) 2014-2016 by the respective copyright holders.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  */
 package org.eclipse.smarthome.binding.minecraft.handler;
+
+import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.ENDPOINT;
 
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -19,6 +25,8 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
     private Logger logger = LoggerFactory.getLogger(MinecraftHandler.class);
 
+    private String endpoint = null;
+
     public MinecraftBridgeHandler(Bridge bridge) {
         super(bridge);
     }
@@ -35,13 +43,11 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         // nothing todo
     }
 
-    private String endpoint = null;
-
     @Override
     public void initialize() {
         logger.debug("Initializing Minecraft bridge handler.");
 
-        endpoint = (String) getConfig().get("endpoint");
+        endpoint = (String) getConfig().get(ENDPOINT);
         // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR, "Cannot connect to
         // bridge.");
         updateStatus(ThingStatus.ONLINE);

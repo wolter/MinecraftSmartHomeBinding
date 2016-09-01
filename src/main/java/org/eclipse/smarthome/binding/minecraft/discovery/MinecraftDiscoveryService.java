@@ -1,7 +1,11 @@
 /**
- *
+ * Copyright (c) 2014-2016 by the respective copyright holders.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.eclipse.smarthome.binding.minecraft.internal;
+package org.eclipse.smarthome.binding.minecraft.discovery;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
 
@@ -64,8 +68,7 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
 
     private MinecraftThingList requestList() {
 
-        String urlTemplate = "%sthings";
-        String urlString = String.format(urlTemplate, bridge.getEndpoint());
+        String urlString = String.format("%sthings", bridge.getEndpoint());
 
         try {
             // Create HTTP GET request
@@ -85,7 +88,6 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
 
     private void onDeviceAddedInternal(MinecraftThing minecraftThing) {
 
-        ThingUID thingUID = new ThingUID(BINDING_ID, String.valueOf(minecraftThing.id));
         Map<String, Object> properties = new HashMap<>(1);
         properties.put("refresh", new BigDecimal(4));
         properties.put("id", minecraftThing.id);
@@ -121,6 +123,8 @@ public class MinecraftDiscoveryService extends AbstractDiscoveryService {
         }
 
         if (thingTypeUID != null) {
+            ThingUID thingUID = new ThingUID(thingTypeUID, bridge.getThing().getUID(),
+                    String.valueOf(minecraftThing.id));
             String label = String.format("%s %s", minecraftThing.material,
                     String.valueOf(minecraftThing.location.toString()));
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withThingType(thingTypeUID)
