@@ -42,4 +42,8 @@ public class MinecraftBindingConstants {
     public final static String CHANNEL_POWER = "channelPower";
     public final static String CHANNEL_TEMPERATURE = "channelTemperature";
 
+    // Bridge config properties
+    public final static String ENDPOINT = "endpoint";
+    public final static String URI = "uri";
+
 }

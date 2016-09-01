@@ -52,7 +52,8 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
     public Thing createThing(ThingTypeUID thingTypeUID, Configuration configuration, ThingUID thingUID,
             ThingUID bridgeUID) {
         if (SUPPORTED_BRIDGE_TYPES_UIDS.contains(thingTypeUID)) {
-            return super.createThing(thingTypeUID, configuration, bridgeUID, null);
+            ThingUID minecraftBridgeUID = getBridgeThingUID(thingTypeUID, thingUID, configuration);
+            return super.createThing(thingTypeUID, configuration, minecraftBridgeUID, null);
         }
         if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
             return super.createThing(thingTypeUID, configuration, thingUID, bridgeUID);
@@ -98,6 +99,15 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
                 discoveryServiceRegs.remove(thingHandler.getThing().getUID());
             }
         }
+    }
+
+    private ThingUID getBridgeThingUID(ThingTypeUID thingTypeUID, ThingUID thingUID, Configuration configuration) {
+        if (thingUID == null) {
+            String endpoint = (String) configuration.get(ENDPOINT);
+            String id = endpoint.replace("http[s]://", "").replaceAll("\\.", "_").replaceAll(":", "__");
+            thingUID = new ThingUID(thingTypeUID, id);
+        }
+        return thingUID;
     }
 
 }
