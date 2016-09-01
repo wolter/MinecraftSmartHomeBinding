@@ -9,11 +9,7 @@ package org.eclipse.smarthome.binding.minecraft.handler;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
 
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +25,12 @@ import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.Gson;
 
 /**
  * The {@link MinecraftHandler} is responsible for handling commands, which are
@@ -46,8 +42,27 @@ public class MinecraftHandler extends BaseThingHandler {
 
     private Logger logger = LoggerFactory.getLogger(MinecraftHandler.class);
 
+    private MinecraftBridgeHandler bridgeHandler;
+
     public MinecraftHandler(Thing thing) {
         super(thing);
+    }
+
+    private synchronized MinecraftBridgeHandler getBridgeHandler() {
+        if (this.bridgeHandler == null) {
+            Bridge bridge = getBridge();
+            if (bridge == null) {
+                return null;
+            }
+            ThingHandler handler = bridge.getHandler();
+            if (handler instanceof MinecraftBridgeHandler) {
+                this.bridgeHandler = (MinecraftBridgeHandler) handler;
+                // this.bridgeHandler.registerLightStatusListener(this);
+            } else {
+                return null;
+            }
+        }
+        return this.bridgeHandler;
     }
 
     @Override
@@ -104,51 +119,36 @@ public class MinecraftHandler extends BaseThingHandler {
         refreshInterval = ((BigDecimal) config.get("refresh")).longValue();
         id = (String) config.get("id");
 
+        if (id == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Id is empty");
+        } else if (refreshInterval == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Refresh interval is empty");
+        } else {
+            ThingStatus bridgeStatus = (getBridge() == null) ? null : getBridge().getStatus();
+            if (getBridgeHandler() != null) {
+                if (bridgeStatus == ThingStatus.ONLINE) {
+                    updateStatus(ThingStatus.ONLINE);
+                } else {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+                }
+            } else {
+                updateStatus(ThingStatus.OFFLINE);
+            }
+        }
+
         startAutomaticRefresh();
-
-        // TODO: Initialize the thing. If done set status to ONLINE to indicate proper working.
-        // Long running initialization should be done asynchronously in background.
-        // updateStatus(ThingStatus.ONLINE);
-
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work
-        // as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
     }
 
     private void requestState() {
+        MinecraftBridgeHandler bridgeHandler = getBridgeHandler();
 
-        String endpoint;
-
-        try {
-            Bridge bridge = getBridge();
-            MinecraftBridgeHandler minecraftbridgehandler = (MinecraftBridgeHandler) bridge.getHandler();
-            endpoint = minecraftbridgehandler.getEndpoint();
-            if (endpoint.isEmpty()) {
-                logger.warn("Unable to request state for an empty endpoint.");
-                return;
-            }
-        } catch (Exception e) {
-            logger.warn("Unable to request state: " + e.getMessage(), e);
-            updateStatus(ThingStatus.OFFLINE);
+        if (bridgeHandler == null) {
             return;
         }
 
-        String urlTemplate = "%sthings/%s";
-        String urlString = String.format(urlTemplate, endpoint, id);
+        MinecraftThing minecraftThing = bridgeHandler.requestState(id);
 
-        try {
-            // Create HTTP GET request
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            // Process response
-            InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-            Gson gson = new Gson();
-            MinecraftThing minecraftThing = gson.fromJson(reader, MinecraftThing.class);
-
+        if (minecraftThing != null) {
             MinecraftThingComponent component;
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.POWERED);
             if (component != null) {
@@ -208,11 +208,14 @@ public class MinecraftHandler extends BaseThingHandler {
 
             updateStatus(ThingStatus.ONLINE);
 
-        } catch (Exception e) {
-
-            logger.warn("Unable to request state: " + e.getMessage(), e);
+        } else {
             updateStatus(ThingStatus.OFFLINE);
+        }
+    }
 
+    private void postState(MinecraftThingCommand command) {
+        if (getBridgeHandler() != null) {
+            bridgeHandler.postState(command);
         }
     }
 
@@ -232,62 +235,4 @@ public class MinecraftHandler extends BaseThingHandler {
         };
         refreshJob = scheduler.scheduleAtFixedRate(runnable, 0, refreshInterval, TimeUnit.SECONDS);
     }
-
-    private void postState(MinecraftThingCommand command) {
-
-        String endpoint;
-
-        try {
-            Bridge bridge = getBridge();
-            MinecraftBridgeHandler minecraftbridgehandler = (MinecraftBridgeHandler) bridge.getHandler();
-            endpoint = minecraftbridgehandler.getEndpoint();
-            if (endpoint.isEmpty()) {
-                logger.warn("Unable to post command to an empty endpoint.");
-                return;
-            }
-        } catch (Exception e) {
-            logger.warn("Unable to post command: " + e.getMessage(), e);
-            updateStatus(ThingStatus.OFFLINE);
-            return;
-        }
-
-        String urlString = endpoint + "commands/execute/";
-        String json = new Gson().toJson(command);
-
-        try {
-
-            // Create HTTP POST request
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
-            out.write(json);
-            out.close();
-
-            // Process response
-            // InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-            // Gson gson = new Gson();
-            // MinecraftThing thing = gson.fromJson(reader, MinecraftThing.class);
-            //
-            // OnOffType state = ((Boolean) thing.components.get(0).state) ? OnOffType.ON : OnOffType.ON;
-            // updateState(CHANNEL_POWERED, state);
-            // logger.info("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED, state);
-
-            if (connection.getResponseCode() == 200) {
-                updateStatus(ThingStatus.ONLINE);
-            } else {
-                logger.warn("Unable to post command: " + connection.getResponseCode());
-                updateStatus(ThingStatus.OFFLINE);
-            }
-            connection.disconnect();
-        } catch (Exception e) {
-            logger.warn("Unable to post command: " + e.getMessage(), e);
-            updateStatus(ThingStatus.OFFLINE);
-        }
-
-    }
-
 }

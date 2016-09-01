@@ -9,6 +9,14 @@ package org.eclipse.smarthome.binding.minecraft.handler;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.ENDPOINT;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
+import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -16,6 +24,8 @@ import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
 
 /**
  * @author sw
@@ -59,6 +69,66 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
     public String getEndpoint() {
         return endpoint;
+    }
+
+    public MinecraftThing requestState(String id) {
+        String urlTemplate = "%sthings/%s";
+        String urlString = String.format(urlTemplate, endpoint, id);
+        MinecraftThing minecraftThing = null;
+
+        try {
+            // Create HTTP GET request
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            // Process response
+            InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+            Gson gson = new Gson();
+            minecraftThing = gson.fromJson(reader, MinecraftThing.class);
+        } catch (IOException e) {
+            logger.error("Cannot request state for minecraft thing " + id, e);
+        }
+
+        return minecraftThing;
+    }
+
+    public void postState(MinecraftThingCommand command) {
+        String urlString = endpoint + "commands/execute/";
+        String json = new Gson().toJson(command);
+
+        try {
+
+            // Create HTTP POST request
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+
+            OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
+            out.write(json);
+            out.close();
+
+            // Process response
+            // InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+            // Gson gson = new Gson();
+            // MinecraftThing thing = gson.fromJson(reader, MinecraftThing.class);
+            //
+            // OnOffType state = ((Boolean) thing.components.get(0).state) ? OnOffType.ON : OnOffType.ON;
+            // updateState(CHANNEL_POWERED, state);
+            // logger.info("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED, state);
+
+            if (connection.getResponseCode() == 200) {
+                updateStatus(ThingStatus.ONLINE);
+            } else {
+                logger.warn("Unable to post command: " + connection.getResponseCode());
+                updateStatus(ThingStatus.OFFLINE);
+            }
+            connection.disconnect();
+        } catch (Exception e) {
+            logger.warn("Unable to post command: " + e.getMessage(), e);
+            updateStatus(ThingStatus.OFFLINE);
+        }
     }
 
 }
