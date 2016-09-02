@@ -17,7 +17,7 @@ import java.util.Set;
 
 import org.eclipse.smarthome.binding.minecraft.discovery.MinecraftDiscoveryService;
 import org.eclipse.smarthome.binding.minecraft.handler.MinecraftBridgeHandler;
-import org.eclipse.smarthome.binding.minecraft.handler.MinecraftHandler;
+import org.eclipse.smarthome.binding.minecraft.handler.MinecraftThingHandler;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -58,7 +58,7 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
         }
         if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
             ThingUID minecraftThingUID = getMinecraftThingUID(thingTypeUID, thingUID, configuration, bridgeUID);
-            return super.createThing(thingTypeUID, configuration, thingUID, bridgeUID);
+            return super.createThing(thingTypeUID, configuration, minecraftThingUID, bridgeUID);
         }
         throw new IllegalArgumentException("The thing type " + thingTypeUID + " is not supported by the hue binding.");
     }
@@ -74,7 +74,7 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
             return bridgeHandler;
         }
         if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
-            MinecraftHandler thingHandler = new MinecraftHandler(thing);
+            MinecraftThingHandler thingHandler = new MinecraftThingHandler(thing);
             return thingHandler;
         }
         throw new IllegalArgumentException(
@@ -95,8 +95,6 @@ public class MinecraftHandlerFactory extends BaseThingHandlerFactory {
             ServiceRegistration<?> serviceReg = this.discoveryServiceRegs.get(thingHandler.getThing().getUID());
             if (serviceReg != null) {
                 // remove discovery service, if bridge handler is removed
-                MinecraftDiscoveryService service = (MinecraftDiscoveryService) bundleContext
-                        .getService(serviceReg.getReference());
                 serviceReg.unregister();
                 discoveryServiceRegs.remove(thingHandler.getThing().getUID());
             }

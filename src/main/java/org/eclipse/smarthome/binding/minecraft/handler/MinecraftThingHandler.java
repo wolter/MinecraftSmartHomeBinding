@@ -26,6 +26,7 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingStatusInfo;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
@@ -33,18 +34,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MinecraftHandler} is responsible for handling commands, which are
+ * The {@link MinecraftThingHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Sascha Wolter - Initial contribution
  */
-public class MinecraftHandler extends BaseThingHandler {
+public class MinecraftThingHandler extends BaseThingHandler {
 
-    private Logger logger = LoggerFactory.getLogger(MinecraftHandler.class);
+    private Logger logger = LoggerFactory.getLogger(MinecraftThingHandler.class);
 
     private MinecraftBridgeHandler bridgeHandler;
 
-    public MinecraftHandler(Thing thing) {
+    public MinecraftThingHandler(Thing thing) {
         super(thing);
     }
 
@@ -57,12 +58,17 @@ public class MinecraftHandler extends BaseThingHandler {
             ThingHandler handler = bridge.getHandler();
             if (handler instanceof MinecraftBridgeHandler) {
                 this.bridgeHandler = (MinecraftBridgeHandler) handler;
-                // this.bridgeHandler.registerLightStatusListener(this);
             } else {
                 return null;
             }
         }
         return this.bridgeHandler;
+    }
+
+    public void setStatus(ThingStatus status) {
+        if (thing.getStatus() != status) {
+            updateStatus(status);
+        }
     }
 
     @Override
@@ -135,8 +141,19 @@ public class MinecraftHandler extends BaseThingHandler {
                 updateStatus(ThingStatus.OFFLINE);
             }
         }
+    }
 
-        startAutomaticRefresh();
+    @Override
+    public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
+        if (bridgeStatusInfo.getStatus() == ThingStatus.ONLINE) {
+            updateStatus(ThingStatus.ONLINE);
+            startAutomaticRefresh();
+        } else {
+            if (refreshJob != null) {
+                refreshJob.cancel(true);
+            }
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+        }
     }
 
     private void requestState() {
@@ -206,10 +223,10 @@ public class MinecraftHandler extends BaseThingHandler {
                 logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_TEMPERATURE, state);
             }
 
-            updateStatus(ThingStatus.ONLINE);
+            setStatus(ThingStatus.ONLINE);
 
         } else {
-            updateStatus(ThingStatus.OFFLINE);
+            setStatus(ThingStatus.OFFLINE);
         }
     }
 
