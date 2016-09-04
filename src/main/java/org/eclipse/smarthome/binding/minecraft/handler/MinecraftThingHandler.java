@@ -121,6 +121,10 @@ public class MinecraftThingHandler extends BaseThingHandler {
     @Override
     public void initialize() {
 
+        if (refreshJob != null) {
+            refreshJob.cancel(true);
+        }
+
         Configuration config = getConfig();
         refreshInterval = ((BigDecimal) config.get("refresh")).longValue();
         id = (String) config.get("id");
@@ -134,6 +138,7 @@ public class MinecraftThingHandler extends BaseThingHandler {
             if (getBridgeHandler() != null) {
                 if (bridgeStatus == ThingStatus.ONLINE) {
                     updateStatus(ThingStatus.ONLINE);
+                    startAutomaticRefresh();
                 } else {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
                 }
