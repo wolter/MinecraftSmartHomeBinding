@@ -20,6 +20,9 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingList;
+import org.eclipse.smarthome.binding.minecraft.sse.Client;
+import org.eclipse.smarthome.binding.minecraft.sse.Event;
+import org.eclipse.smarthome.binding.minecraft.sse.EventHandler;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -71,26 +74,36 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
         startAlivePing();
 
-        /*
-         * // TODO Refactor prototypic trial of SSE
-         * Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
-         *
-         * WebTarget target = client.target(endpoint + "events/");
-         * logger.info("!!!" + endpoint + "events/");
-         * EventSource eventSource = EventSource.target(target).build();
-         * EventListener listener = new EventListener() {
-         *
-         * @Override
-         * public void onEvent(InboundEvent inboundEvent) {
-         * logger.info("!!!" + inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
-         * }
-         * };
-         * // here you could filter for certain messages
-         * eventSource.register(listener);
-         * eventSource.open();
-         * // ...
-         * // TODO Don't forget to close the eventSource.close();
-         */
+        // // TODO Refactor prototypic trial of SSE
+        // Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
+        //
+        // WebTarget target = client.target(endpoint + "events/");
+        // logger.info("!!!" + endpoint + "events/");
+        // EventSource eventSource = EventSource.target(target).build();
+        // EventListener listener = new EventListener() {
+        //
+        // @Override
+        // public void onEvent(InboundEvent inboundEvent) {
+        // logger.info("!!!" + inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+        // }
+        // };
+        // // here you could filter for certain messages
+        // eventSource.register(listener);
+        // eventSource.open();
+        // // ...
+        // // TODO Don't forget to close the eventSource.close();
+
+        Client client = new Client(new EventHandler() {
+
+            @Override
+            public void onEvent(Event event) {
+                logger.info("!!!" + event.getName() + "; " + event.getData());
+            }
+        }, endpoint + "events/");
+        try {
+            client.start();
+        } catch (IOException e) {
+        }
 
     }
 
