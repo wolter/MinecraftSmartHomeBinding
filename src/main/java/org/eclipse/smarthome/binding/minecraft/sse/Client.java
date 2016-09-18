@@ -81,13 +81,14 @@ public class Client {
                             String string = new String(buffer, 0, read, "utf-8");
 
                             // Fire the event
-                            eventHandler.onEvent(Event.parse(string));
+                            Event event = Event.parse(string);
+                            eventHandler.onEvent(event);
                             if (!running.get()) {
                                 break;
                             }
                         }
                     } catch (IOException e) {
-                        LOGGER.error("IOException while receiving events", e);
+                        eventHandler.onError(e);
                     }
                 }
                 LOGGER.debug("SSE thread stopped");

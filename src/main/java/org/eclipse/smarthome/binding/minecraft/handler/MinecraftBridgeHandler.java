@@ -14,8 +14,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
@@ -23,10 +22,11 @@ import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingList;
 import org.eclipse.smarthome.binding.minecraft.sse.Client;
 import org.eclipse.smarthome.binding.minecraft.sse.Event;
 import org.eclipse.smarthome.binding.minecraft.sse.EventHandler;
+import org.eclipse.smarthome.binding.minecraft.sse.MessageType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
+import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
-import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.slf4j.Logger;
@@ -63,48 +63,8 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
     @Override
     public void initialize() {
         logger.debug("Initializing Minecraft bridge handler.");
-
         endpoint = (String) getConfig().get(ENDPOINT);
-        if (isServerAlive()) {
-            updateStatus(ThingStatus.ONLINE);
-        } else {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.CONFIGURATION_ERROR,
-                    "Cannot connect to bridge.");
-        }
-
-        startAlivePing();
-
-        // // TODO Refactor prototypic trial of SSE
-        // Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
-        //
-        // WebTarget target = client.target(endpoint + "events/");
-        // logger.info("!!!" + endpoint + "events/");
-        // EventSource eventSource = EventSource.target(target).build();
-        // EventListener listener = new EventListener() {
-        //
-        // @Override
-        // public void onEvent(InboundEvent inboundEvent) {
-        // logger.info("!!!" + inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
-        // }
-        // };
-        // // here you could filter for certain messages
-        // eventSource.register(listener);
-        // eventSource.open();
-        // // ...
-        // // TODO Don't forget to close the eventSource.close();
-
-        Client client = new Client(new EventHandler() {
-
-            @Override
-            public void onEvent(Event event) {
-                logger.info("!!!" + event.getName() + "; " + event.getData());
-            }
-        }, endpoint + "events/");
-        try {
-            client.start();
-        } catch (IOException e) {
-        }
-
+        startServerSentEventsListener();
     }
 
     public void setStatus(ThingStatus status) {
@@ -117,20 +77,9 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         return endpoint;
     }
 
-    public boolean isServerAlive() {
-        try (InputStreamReader reader = executeGetRequest(String.format("%shello", endpoint))) {
-            setStatus(ThingStatus.ONLINE);
-            return true;
-        } catch (IOException e) {
-            if (thing.getStatus() != ThingStatus.OFFLINE) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-            }
-        }
-        return false;
-    }
-
     public MinecraftThing requestState(String id) {
         try (InputStreamReader reader = executeGetRequest(String.format("%sthings/%s", endpoint, id))) {
+            setStatus(ThingStatus.ONLINE);
             Gson gson = new Gson();
             return gson.fromJson(reader, MinecraftThing.class);
         } catch (IOException e) {
@@ -143,6 +92,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
     public MinecraftThingList requestList() {
         try (InputStreamReader reader = executeGetRequest(String.format("%sthings", endpoint))) {
+            setStatus(ThingStatus.ONLINE);
             Gson gson = new Gson();
             return gson.fromJson(reader, MinecraftThingList.class);
         } catch (Exception e) {
@@ -199,20 +149,86 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         }
     }
 
-    private ScheduledFuture<?> refreshJob;
-
     @Override
     public void dispose() {
-        refreshJob.cancel(true);
+        client.stop();
     }
 
-    private void startAlivePing() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                isServerAlive();
+    public Thing getThingByID(String id) {
+        Bridge bridge = getThing();
+        List<Thing> things = bridge.getThings();
+        for (Thing thing : things) {
+            if (thing.getConfiguration().get("id").equals(id)) {
+                return thing;
             }
+        }
+        return null;
+    }
+
+    private Client client;
+
+    private void startServerSentEventsListener() {
+
+        // // Jersey based prototype replaced by low level implementation below due to performacne reasons
+        // Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
+        //
+        // WebTarget target = client.target(endpoint + "events/");
+        // logger.info("!!!" + endpoint + "events/");
+        // EventSource eventSource = EventSource.target(target).build();
+        // EventListener listener = new EventListener() {
+        //
+        // @Override
+        // public void onEvent(InboundEvent inboundEvent) {
+        // logger.info("!!!" + inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+        // }
+        // };
+        // // here you could filter for certain messages
+        // eventSource.register(listener);
+        // eventSource.open();
+        // // ...
+        // // TODO Don't forget to close the eventSource.close();
+        EventHandler handler = new EventHandler() {
+
+            @Override
+            public void onEvent(Event event) {
+                logger.info("!!!" + event.getName() + "; " + event.getData());
+                Gson gson = new Gson();
+                setStatus(ThingStatus.ONLINE);
+                if (event.getName().equals(MessageType.UPDATE_THING.toString())) {
+                    final MinecraftThingCommand command = gson.fromJson(event.getData(), MinecraftThingCommand.class);
+                    // TODO handle thing update here
+                    scheduler.execute(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            // TODO Auto-generated method stub
+                            ((MinecraftThingHandler) getThingByID(command.id).getHandler())
+                                    .handleMinecraftThingCommand(command);
+                        }
+                    });
+                } else if (event.getName().equals(MessageType.REMOVE_THING.toString())) {
+                    MinecraftThing minecraftThing = gson.fromJson(event.getData(), MinecraftThing.class);
+                    // TODO handle remove here
+                } else {
+                    // TODO ignore so far
+                }
+
+            }
+
+            @Override
+            public void onError(IOException error) {
+                logger.error(error.getMessage());
+                setStatus(ThingStatus.OFFLINE);
+            }
+
         };
-        refreshJob = scheduler.scheduleAtFixedRate(runnable, 0, 5, TimeUnit.SECONDS);
+
+        client = new Client(handler, endpoint + "events/");
+        try {
+            client.start();
+            setStatus(ThingStatus.ONLINE);
+        } catch (IOException e) {
+            setStatus(ThingStatus.OFFLINE);
+        }
     }
 }

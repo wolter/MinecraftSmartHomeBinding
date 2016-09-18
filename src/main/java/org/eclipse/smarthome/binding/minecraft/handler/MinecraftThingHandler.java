@@ -27,6 +27,7 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
@@ -115,8 +116,13 @@ public class MinecraftThingHandler extends BaseThingHandler {
         }
     }
 
-    private String id;
     private Long refreshInterval;
+
+    private String id;
+
+    public String getId() {
+        return id;
+    }
 
     @Override
     public void initialize() {
@@ -257,4 +263,71 @@ public class MinecraftThingHandler extends BaseThingHandler {
         };
         refreshJob = scheduler.scheduleAtFixedRate(runnable, 0, refreshInterval, TimeUnit.SECONDS);
     }
+
+    public void handleMinecraftThingCommand(MinecraftThingCommand command) {
+
+        MinecraftThingComponent component = command.component;
+        ThingTypeUID thingTypeUid = getThing().getThingTypeUID();
+
+        if (component.type == MinecraftThingComponentType.POWERED) {
+            OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
+            if (thingTypeUid.getId().equals(THING_TYPE_MINECRAFT_SWITCH.getId())
+                    || thingTypeUid.getId().equals(THING_TYPE_MINECRAFT_BUTTON.getId())) {
+                updateState(CHANNEL_POWERED, state);
+                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED, state);
+            } else {
+                // Tripwire or Lamp
+                updateState(CHANNEL_POWERED_READONLY, state);
+                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED_READONLY, state);
+            }
+        }
+
+        /*
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.OPEN);
+         * if (component != null) {
+         * OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
+         * updateState(CHANNEL_OPEN, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_OPEN, state);
+         * }
+         *
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.PRESSED);
+         * if (component != null) {
+         * OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
+         * updateState(CHANNEL_PRESSED, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_PRESSED, state);
+         * }
+         *
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.HUMIDITY);
+         * if (component != null) {
+         * DecimalType state = new DecimalType((Double) component.state);
+         * updateState(CHANNEL_HUMIDITY, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_HUMIDITY, state);
+         * }
+         *
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.LIGHT);
+         * if (component != null) {
+         * DecimalType state = new DecimalType((Double) component.state);
+         * updateState(CHANNEL_LIGHT, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_LIGHT, state);
+         * }
+         *
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.POWER);
+         * if (component != null) {
+         * DecimalType state = new DecimalType((Double) component.state);
+         * updateState(CHANNEL_POWER, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWER, state);
+         * }
+         *
+         * component = minecraftThing.getComponentByType(MinecraftThingComponentType.TEMPERATURE);
+         * if (component != null) {
+         * DecimalType state = new DecimalType((Double) component.state);
+         * updateState(CHANNEL_TEMPERATURE, state);
+         * logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_TEMPERATURE, state);
+         * }
+         */
+
+        setStatus(ThingStatus.ONLINE);
+
+    }
+
 }
