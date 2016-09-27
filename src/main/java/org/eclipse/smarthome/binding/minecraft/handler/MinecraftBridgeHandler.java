@@ -169,7 +169,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
     private void startServerSentEventsListener() {
 
-        // // Jersey based prototype replaced by low level implementation below due to performacne reasons
+        // // Jersey based prototype replaced by low level implementation below due to performance reasons
         // Client client = ClientBuilder.newBuilder().register(SseFeature.class).build();
         //
         // WebTarget target = client.target(endpoint + "events/");
@@ -187,6 +187,8 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         // eventSource.open();
         // // ...
         // // TODO Don't forget to close the eventSource.close();
+
+        // Low level implementation of SSE
         EventHandler handler = new EventHandler() {
 
             @Override
@@ -196,19 +198,23 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
                 setStatus(ThingStatus.ONLINE);
                 if (event.getName().equals(MessageType.UPDATE_THING.toString())) {
                     final MinecraftThingCommand command = gson.fromJson(event.getData(), MinecraftThingCommand.class);
-                    // TODO handle thing update here
+                    // Handle thing update here
                     scheduler.execute(new Runnable() {
-
                         @Override
                         public void run() {
-                            // TODO Auto-generated method stub
                             ((MinecraftThingHandler) getThingByID(command.id).getHandler())
                                     .handleMinecraftThingCommand(command);
                         }
                     });
                 } else if (event.getName().equals(MessageType.REMOVE_THING.toString())) {
-                    MinecraftThing minecraftThing = gson.fromJson(event.getData(), MinecraftThing.class);
-                    // TODO handle remove here
+                    final MinecraftThing minecraftThing = gson.fromJson(event.getData(), MinecraftThing.class);
+                    // Handle remove here
+                    scheduler.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((MinecraftThingHandler) getThingByID(minecraftThing.id).getHandler()).handleRemoval();
+                        }
+                    });
                 } else {
                     // TODO ignore so far
                 }
