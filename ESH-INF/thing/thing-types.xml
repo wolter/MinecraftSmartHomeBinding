@@ -31,11 +31,6 @@
         </channels>
 
 		<config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>			
 			<parameter name="id" type="text" required="true">
 				<label>Identifier</label>
 				<default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -59,11 +54,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -87,11 +77,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -116,11 +101,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true">
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>            
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -147,11 +127,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>            
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -175,11 +150,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>            
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>
@@ -203,11 +173,6 @@
         </channels>
 
         <config-description>
-            <parameter name="refresh" type="integer" required="true" min="1" max="60" >
-                <label>Refresh</label>
-                <default>10</default>
-                <description>Refresh interval of Minecraft Block's status</description>
-            </parameter>            
             <parameter name="id" type="text" required="true">
                 <label>Identifier</label>
                 <default>9107b4fb-2050-4460-8acc-6fca3db75e22</default>

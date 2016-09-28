@@ -9,15 +9,10 @@ package org.eclipse.smarthome.binding.minecraft.handler;
 
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.*;
 
-import java.math.BigDecimal;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingComponent;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingComponentType;
-import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingType;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
@@ -67,8 +62,24 @@ public class MinecraftThingHandler extends BaseThingHandler {
     }
 
     public void setStatus(ThingStatus status) {
+        setStatus(status, ThingStatusDetail.NONE, null);
+    }
+
+    public void setStatus(ThingStatus status, ThingStatusDetail statusDetail, String description) {
         if (thing.getStatus() != status) {
-            updateStatus(status);
+
+            updateStatus(status, statusDetail, description);
+
+            // if status changed to online, just get the current initial state of its channels once
+            if (status == ThingStatus.ONLINE) {
+                scheduler.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestState();
+                    }
+                });
+            }
+
         }
     }
 
@@ -113,10 +124,9 @@ public class MinecraftThingHandler extends BaseThingHandler {
                 // indicate that by setting the status with detail information
                 // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 // "Could not control device at IP address x.x.x.x");
+                setStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Unhandled channel.");
         }
     }
-
-    private Long refreshInterval;
 
     private String id;
 
@@ -127,43 +137,33 @@ public class MinecraftThingHandler extends BaseThingHandler {
     @Override
     public void initialize() {
 
-        if (refreshJob != null) {
-            refreshJob.cancel(true);
-        }
-
         Configuration config = getConfig();
-        refreshInterval = ((BigDecimal) config.get("refresh")).longValue();
         id = (String) config.get("id");
 
         if (id == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Id is empty");
-        } else if (refreshInterval == null) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Refresh interval is empty");
         } else {
             ThingStatus bridgeStatus = (getBridge() == null) ? null : getBridge().getStatus();
             if (getBridgeHandler() != null) {
                 if (bridgeStatus == ThingStatus.ONLINE) {
-                    updateStatus(ThingStatus.ONLINE);
-                    startAutomaticRefresh();
+                    setStatus(ThingStatus.ONLINE);
                 } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+                    setStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE,
+                            "Could not find Minecraft server.");
                 }
             } else {
-                updateStatus(ThingStatus.OFFLINE);
+                setStatus(ThingStatus.OFFLINE);
             }
         }
+
     }
 
     @Override
     public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
         if (bridgeStatusInfo.getStatus() == ThingStatus.ONLINE) {
-            updateStatus(ThingStatus.ONLINE);
-            startAutomaticRefresh();
+            setStatus(ThingStatus.ONLINE);
         } else {
-            if (refreshJob != null) {
-                refreshJob.cancel(true);
-            }
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+            setStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "Could not find Minecraft server.");
         }
     }
 
@@ -180,62 +180,32 @@ public class MinecraftThingHandler extends BaseThingHandler {
             MinecraftThingComponent component;
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.POWERED);
             if (component != null) {
-                OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
-                if (minecraftThing.type.equals(MinecraftThingType.SWITCH)
-                        || minecraftThing.type.equals(MinecraftThingType.BUTTON)) {
-                    updateState(CHANNEL_POWERED, state);
-                    logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED, state);
-                } else {
-                    // Tripwire or Lamp
-                    updateState(CHANNEL_POWERED_READONLY, state);
-                    logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED_READONLY, state);
-                }
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.OPEN);
             if (component != null) {
-                OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
-                updateState(CHANNEL_OPEN, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_OPEN, state);
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.PRESSED);
             if (component != null) {
-                OnOffType state = ((Boolean) component.state) ? OnOffType.ON : OnOffType.OFF;
-                updateState(CHANNEL_PRESSED, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_PRESSED, state);
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.HUMIDITY);
             if (component != null) {
-                DecimalType state = new DecimalType((Double) component.state);
-                updateState(CHANNEL_HUMIDITY, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_HUMIDITY, state);
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.LIGHT);
             if (component != null) {
-                DecimalType state = new DecimalType((Double) component.state);
-                updateState(CHANNEL_LIGHT, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_LIGHT, state);
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.POWER);
             if (component != null) {
-                DecimalType state = new DecimalType((Double) component.state);
-                updateState(CHANNEL_POWER, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWER, state);
+                handleMinecraftThingUpdate(component);
             }
-
             component = minecraftThing.getComponentByType(MinecraftThingComponentType.TEMPERATURE);
             if (component != null) {
-                DecimalType state = new DecimalType((Double) component.state);
-                updateState(CHANNEL_TEMPERATURE, state);
-                logger.debug("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_TEMPERATURE, state);
+                handleMinecraftThingUpdate(component);
             }
-
-            setStatus(ThingStatus.ONLINE);
-
         } else {
             setStatus(ThingStatus.OFFLINE);
         }
@@ -247,28 +217,10 @@ public class MinecraftThingHandler extends BaseThingHandler {
         }
     }
 
-    private ScheduledFuture<?> refreshJob;
-
-    @Override
-    public void dispose() {
-        refreshJob.cancel(true);
-    }
-
-    private void startAutomaticRefresh() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                requestState();
-            }
-        };
-        refreshJob = scheduler.scheduleAtFixedRate(runnable, 0, refreshInterval, TimeUnit.SECONDS);
-    }
-
-    public void handleMinecraftThingCommand(MinecraftThingCommand command) {
+    public void handleMinecraftThingUpdate(MinecraftThingComponent component) {
 
         setStatus(ThingStatus.ONLINE);
 
-        MinecraftThingComponent component = command.component;
         ThingTypeUID thingTypeUid = getThing().getThingTypeUID();
 
         if (component.type == MinecraftThingComponentType.POWERED) {

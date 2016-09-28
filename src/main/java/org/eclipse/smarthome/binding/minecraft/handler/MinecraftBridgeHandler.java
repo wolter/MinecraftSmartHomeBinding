@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThing;
 import org.eclipse.smarthome.binding.minecraft.model.MinecraftThingCommand;
@@ -68,9 +69,11 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
     }
 
     public void setStatus(ThingStatus status) {
+
         if (thing.getStatus() != status) {
             updateStatus(status);
         }
+
     }
 
     public String getEndpoint() {
@@ -127,15 +130,6 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
             out.write(json);
             out.close();
 
-            // Process response
-            // InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-            // Gson gson = new Gson();
-            // MinecraftThing thing = gson.fromJson(reader, MinecraftThing.class);
-            //
-            // OnOffType state = ((Boolean) thing.components.get(0).state) ? OnOffType.ON : OnOffType.ON;
-            // updateState(CHANNEL_POWERED, state);
-            // logger.info("Update of {} : {} to {}", this.getThing().getUID(), CHANNEL_POWERED, state);
-
             if (connection.getResponseCode() == 200) {
                 setStatus(ThingStatus.ONLINE);
             } else {
@@ -151,7 +145,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void dispose() {
-        client.stop();
+        stopServerSentEventsListener();
     }
 
     public Thing getThingByID(String id) {
@@ -166,6 +160,12 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
     }
 
     private Client client;
+
+    private void stopServerSentEventsListener() {
+        if (client != null) {
+            client.stop();
+        }
+    }
 
     private void startServerSentEventsListener() {
 
@@ -193,7 +193,6 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
 
             @Override
             public void onEvent(Event event) {
-                logger.info("!!!" + event.getName() + "; " + event.getData());
                 Gson gson = new Gson();
                 setStatus(ThingStatus.ONLINE);
                 if (event.getName().equals(MessageType.UPDATE_THING.toString())) {
@@ -203,7 +202,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
                         @Override
                         public void run() {
                             ((MinecraftThingHandler) getThingByID(command.id).getHandler())
-                                    .handleMinecraftThingCommand(command);
+                                    .handleMinecraftThingUpdate(command.component);
                         }
                     });
                 } else if (event.getName().equals(MessageType.REMOVE_THING.toString())) {
@@ -216,7 +215,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
                         }
                     });
                 } else {
-                    // TODO ignore so far
+                    // ignore so far
                 }
 
             }
@@ -232,9 +231,18 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         client = new Client(handler, endpoint + "events/");
         try {
             client.start();
-            setStatus(ThingStatus.ONLINE);
         } catch (IOException e) {
             setStatus(ThingStatus.OFFLINE);
+
+            stopServerSentEventsListener();
+            // retry in 5 seconds until it works
+            scheduler.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    updateStatus(ThingStatus.INITIALIZING);
+                    startServerSentEventsListener();
+                }
+            }, 5, TimeUnit.SECONDS);
         }
     }
 }
