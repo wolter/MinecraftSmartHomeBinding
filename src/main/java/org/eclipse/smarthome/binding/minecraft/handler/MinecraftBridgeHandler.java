@@ -10,9 +10,11 @@ package org.eclipse.smarthome.binding.minecraft.handler;
 import static org.eclipse.smarthome.binding.minecraft.MinecraftBindingConstants.ENDPOINT;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,7 @@ import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.slf4j.Logger;
@@ -68,7 +71,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         startServerSentEventsListener();
     }
 
-    public void setStatus(ThingStatus status) {
+    public synchronized void setStatus(ThingStatus status) {
 
         if (thing.getStatus() != status) {
             updateStatus(status);
@@ -117,18 +120,30 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         String urlString = endpoint + "commands/execute/";
         String json = new Gson().toJson(command);
 
+        // Create HTTP POST request
+        URL url;
         try {
+            url = new URL(urlString);
+        } catch (MalformedURLException e) {
+            logger.warn("Unable to post command: " + e.getMessage());
+            setStatus(ThingStatus.OFFLINE);
+            return;
+        }
 
-            // Create HTTP POST request
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        // TODO HTTP Client should be unified with the one in org.eclipse.smarthome.binding.minecraft.sse.Client
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
 
             OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
-            out.write(json);
-            out.close();
+            try {
+                out.write(json);
+            } finally {
+                out.close();
+            }
 
             if (connection.getResponseCode() == 200) {
                 setStatus(ThingStatus.ONLINE);
@@ -136,10 +151,22 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
                 logger.warn("Unable to post command: " + connection.getResponseCode());
                 setStatus(ThingStatus.OFFLINE);
             }
-            connection.disconnect();
-        } catch (Exception e) {
-            logger.warn("Unable to post command: " + e.getMessage(), e);
+
+        } catch (IOException e) {
+            logger.warn("Unable to post command: " + e.getMessage());
             setStatus(ThingStatus.OFFLINE);
+        } finally {
+            if (connection != null) {
+                InputStream errorStream = connection.getErrorStream();
+                if (errorStream != null) {
+                    try {
+                        errorStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                connection.disconnect();
+            }
         }
     }
 
@@ -211,7 +238,9 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
                     scheduler.execute(new Runnable() {
                         @Override
                         public void run() {
-                            ((MinecraftThingHandler) getThingByID(minecraftThing.id).getHandler()).handleRemoval();
+                            ThingUID thingUID = getThingByID(minecraftThing.id).getUID();
+                            thingRegistry.forceRemove(thingUID);
+                            // ((MinecraftThingHandler) getThingByID(minecraftThing.id).getHandler()).handleRemoval();
                         }
                     });
                 } else {
@@ -232,6 +261,7 @@ public class MinecraftBridgeHandler extends BaseBridgeHandler {
         try {
             client.start();
         } catch (IOException e) {
+
             setStatus(ThingStatus.OFFLINE);
 
             stopServerSentEventsListener();
